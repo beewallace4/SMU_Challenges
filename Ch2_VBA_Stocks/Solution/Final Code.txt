@@ -1,0 +1,147 @@
+Sub stocks()
+    Dim ws As Worksheet
+
+    For Each ws In ThisWorkbook.Worksheets
+        ' init variables
+        Dim vol As Double
+        vol = 0
+        Dim openPrice As Double
+        openPrice = ws.Cells(2, 3).Value
+        Dim RowCount As Double
+        
+        ' keep track of row, and stock ticker
+        Dim Ticker As String
+        Dim i As Double
+        
+        ' keep track of SUMMARY TABLE ROW
+        Dim summTableRow As Double
+        summTableRow = 2
+                
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Columns(9).AutoFit
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Columns(10).AutoFit
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Columns(11).AutoFit
+        ws.Cells(1, 12).Value = "Total Volume"
+        ws.Columns(12).AutoFit
+        ws.Cells(1, 16).Value = "Ticker"
+        ws.Cells(1, 17).Value = "Value"
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(4, 15).Value = "Greatest Total Volume"
+        ws.Columns(15).AutoFit
+        
+        'get row count
+        RowCount = ws.Cells(Rows.Count, "A").End(xlUp).Row
+    
+        ' for each row
+        For i = 2 To RowCount
+            
+            ' get the ticker of that row
+            Ticker = ws.Cells(i, 1).Value
+           
+            ' if the ticker in the next row is different...
+            If (Ticker <> ws.Cells(i + 1, 1).Value) Then
+                
+                ' finish the Total Volume by grabbing value from the last row of the group
+                vol = vol + ws.Cells(i, 7).Value
+                            
+                ' write out to the summary table
+                ws.Cells(summTableRow, 9).Value = Ticker
+                ws.Cells(summTableRow, 10).Value = ws.Cells(i, 6).Value - openPrice
+                ws.Cells(summTableRow, 10).NumberFormat = "0.00"
+                ws.Cells(summTableRow, 11).Value = (ws.Cells(i, 6).Value - openPrice) / openPrice
+                ws.Cells(summTableRow, 11).NumberFormat = "0.00%"
+                ws.Cells(summTableRow, 12).Value = vol
+                
+                'color format
+                If ws.Cells(summTableRow, 10).Value < 0 Then
+                    ws.Cells(summTableRow, 10).Interior.ColorIndex = 3
+                Else
+                    ws.Cells(summTableRow, 10).Interior.ColorIndex = 4
+                End If
+                
+                ' reset the vol for the next Stock
+                vol = 0
+                summTableRow = summTableRow + 1
+                openPrice = ws.Cells(i + 1, 3).Value
+                
+            ' if the next ticker is the same
+            Else
+                ' increment the volume
+                vol = vol + ws.Cells(i, 7).Value
+            End If
+        
+        Next i
+        
+        'bonus
+        Dim j As Integer
+        Dim volTicker As String
+        Dim maxVol As Double
+        Dim maxPerc As Double
+        Dim maxTicker As String
+        Dim minPerc As Double
+        Dim minTicker As String
+        
+        maxVol = 0
+        maxPerc = -999999999999#
+        minPerc = 9999999999999#
+        
+        For j = 2 To summTableRow - 1
+            If (ws.Cells(j, 12).Value > maxVol) Then
+                maxVol = ws.Cells(j, 12).Value
+                volTicker = ws.Cells(j, 9).Value
+            End If
+            
+            If (ws.Cells(j, 11).Value > maxPerc) Then
+                maxPerc = ws.Cells(j, 11).Value
+                maxTicker = ws.Cells(j, 9).Value
+            End If
+            
+            If (ws.Cells(j, 11).Value < minPerc) Then
+                minPerc = ws.Cells(j, 11).Value
+                minTicker = ws.Cells(j, 9).Value
+            End If
+            
+        Next j
+        
+        ws.Cells(4, 16).Value = volTicker
+        ws.Cells(4, 17).Value = maxVol
+        ws.Columns(17).AutoFit
+        ws.Cells(2, 16).Value = maxTicker
+        ws.Cells(2, 17).Value = maxPerc
+        ws.Cells(2, 17).NumberFormat = "0.00%"
+        ws.Cells(3, 16).Value = minTicker
+        ws.Cells(3, 17).Value = minPerc
+        ws.Cells(3, 17).NumberFormat = "0.00%"
+        
+        
+    Next ws
+
+End Sub
+
+'function to clear new data
+Sub VBA_Clear_Range()
+
+    Dim ws As Worksheet
+    Dim i As Integer
+    Dim j As Integer
+    
+    For Each ws In ThisWorkbook.Worksheets
+     
+        RowCount = ws.Cells(Rows.Count, "I").End(xlUp).Row
+        
+        For i = 1 To RowCount
+        
+            For j = 9 To 19
+            
+                ws.Cells(i, j).Clear
+        
+            Next j
+        
+        Next i
+        
+    Next ws
+
+End Sub
